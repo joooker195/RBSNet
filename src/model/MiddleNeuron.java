@@ -29,6 +29,10 @@ public class MiddleNeuron implements Neuron
     public double getFi()
     {
         u =  Math.exp(-0.5*u*w);
+        if(u>=1)
+        {
+            u = Mathemath.normalize(u);
+        }
         System.out.println("w = "+w +" u = " + u);
         return u;
     }
@@ -54,6 +58,14 @@ public class MiddleNeuron implements Neuron
     public void correctWeight()
     {
         w = w - m*u*delta;
+        if(w<0)
+        {
+            w = w*(-1);
+            if(w < 1 * Math.pow(3, 10))
+            {
+                w = w * Math.pow(3, 10);
+            }
+        }
     }
 
     public String toString()
