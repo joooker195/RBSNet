@@ -90,6 +90,8 @@ public class Function {
                         z=0;
                     }
                 }
+                k=z;
+
                 MiddleNeuron mn = (MiddleNeuron) secondLayer.get(i);
                 InputNeuron n = (InputNeuron) firstLayer.get(i);
                 mn.setDelta(delta);
@@ -105,7 +107,6 @@ public class Function {
                 firstLayer.set(i, n);
 
             }
-            k=z;
 
 
         }
@@ -144,25 +145,22 @@ public class Function {
                 }
                 k=z;
 
-                System.out.println("n = " + Mathemath.normalize(data.get(k)));
-                delta -= Mathemath.normalize(data.get(k));
+                double n = Mathemath.normalize(data.get(k));
+
+                System.out.println("n = " + n);
+                delta -= n;
                 delta = Mathemath.funActivator(delta);
 
 
-                delta = (delta + Mathemath.normalize(data.get(k))) / 2 - delta + 0.6;
+                delta = corr(delta, n);
 
-                if(flag)
-                {
-                    delta = delta + 0.6;
-                }
 
-                System.out.println("delta = " +delta);
+                System.out.println("delta = " + delta);
 
                 DataExchange.dataout.add(delta);
                 DataExchange.datain.add(Mathemath.normalize(data.get(k)));
-                System.out.println("number " + l);
                 k++;
-                l++;
+
             }
             System.out.println(Mathemath.error(DataExchange.datain, DataExchange.dataout));
         }
@@ -170,12 +168,13 @@ public class Function {
         {
             System.out.println("end");
             System.out.println(Mathemath.error(DataExchange.datain, DataExchange.dataout));
-          /*  if(Mathemath.error(DataExchange.datain, DataExchange.dataout)>0.09)
-            {
-                flag = true;
-                testing(data);
-            }*/
+            System.out.println(Mathemath.sd(DataExchange.dataout, Mathemath.average(DataExchange.dataout)));
         }
+    }
+
+    public double corr(double d, double n)
+    {
+        return (delta + n) / 2 - delta + 0.6;
     }
 
 }
