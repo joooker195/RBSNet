@@ -2,6 +2,8 @@ package model;
 
 import controll.MainFunctional;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -23,44 +25,70 @@ public class Function {
         secondLayer = network.get(1);
     }
 
+    private static double e = 0.1;
     public void learn(ArrayList<Double> data) {
         // data = sort();
         System.out.println("Learn");
-        while (delta > 0.001) {
+        DataExchange.datain = new ArrayList<Double>();
+        int k = 0;
+        int z=k;
+        DataExchange.dataout = new ArrayList<Double>();
+        while (Mathemath.normalize(Mathemath.e) >=0.001) {
+            System.out.println("e = "+Mathemath.normalize(Mathemath.e));
             delta = 0;
-            int k = 0;
+            if(k>=data.size()) {
+                 k=0;
+            }
             for (int i = 0; i < firstLayer.size(); i++) {
                 ArrayList<Double> a = new ArrayList<Double>();
-                for (int j = 0; j < 3; j++) {
+                z=k;
+                for (int j = 0; j < 5; j++) {
+                    if(z>=data.size()) {
+                        z=0;
+                    }
                     a.add(Mathemath.normalize(data.get(k), MO, D));
-                    k++;
+                    z++;
+                    if(z>=data.size()) {
+                        z=0;
+                    }
                 }
                 InputNeuron n = (InputNeuron) firstLayer.get(i);
-                double u = Mathemath.normalize(n.getU(a));
+                // double u = Mathemath.normalize(n.getU(a));
+                double u = n.getU(a);
                 MiddleNeuron mn = (MiddleNeuron) secondLayer.get(i);
                 mn.setU(u);
                 delta += mn.getFi();
-                System.out.println("delta = " + delta);
                 secondLayer.set(i, mn);
             }
+            k=z;
             System.out.println(Mathemath.normalize(data.get(k)));
             delta -= Mathemath.normalize(data.get(k));
-            delta = Mathemath.funActivator(delta);
 
 
-            if (MainFunctional.condition(delta, Mathemath.normalize(data.get(k)))) {
+          //  DataExchange.dataout.add(delta);
+           // DataExchange.datain.add(Mathemath.normalize(data.get(k)));
+
+            Mathemath.condition(delta, Mathemath.normalize(data.get(k)));
+            if (MainFunctional.condition(delta, Mathemath.normalize(data.get(k))) && iter>100000) {
                 break;
             }
-
+            delta = Mathemath.funActivator(delta);
             System.out.println(delta);
             k++;
             iter++;
 
             for (int i = 0; i < secondLayer.size(); i++) {
                 ArrayList<Double> a = new ArrayList<Double>();
-                for (int j = 0; j < 3; j++) {
-                    a.add(data.get(k));
-                    k++;
+                z=k;
+                for (int j = 0; j < 5; j++) {
+                    if(z>=data.size()) {
+                        z=0;
+                    }
+                    a.add(data.get(z));
+                    z++;
+                    if(z>=data.size()) {
+                        z=0;
+                    }
                 }
                 MiddleNeuron mn = (MiddleNeuron) secondLayer.get(i);
                 InputNeuron n = (InputNeuron) firstLayer.get(i);
@@ -77,26 +105,77 @@ public class Function {
                 firstLayer.set(i, n);
 
             }
+            k=z;
 
 
         }
 
-        for (int i = 0; i < firstLayer.size(); i++) {
-            //   firstLayer.get(i).toString();
-            //   secondLayer.get(i).toString();
+    }
+
+    private boolean flag = false;
+    public void testing(ArrayList<Double> data) throws IOException {
+        try {
+            System.out.println("Test");
+            DataExchange.datain = new ArrayList<Double>();
+            DataExchange.dataout = new ArrayList<Double>();
+            int l = 0;
+            int k=0;
+            int z=k;
+            while (k < data.size()) {
+                delta = 0;
+              //  int k = 0;
+                for (int i = 0; i < firstLayer.size(); i++) {
+                    ArrayList<Double> a = new ArrayList<Double>();
+                    z=k;
+                    for (int j = 0; j < 5; j++) {
+                        a.add(Mathemath.normalize(data.get(z)));
+                        z++;
+                        if (k >= data.size()) {
+                            break;
+                        }
+                    }
+                    InputNeuron n = (InputNeuron) firstLayer.get(i);
+                    // double u = Mathemath.normalize(n.getU(a));
+                    double u = n.getU(a);
+                    MiddleNeuron mn = (MiddleNeuron) secondLayer.get(i);
+                    mn.setU(u);
+                    delta += mn.getFi();
+                    secondLayer.set(i, mn);
+                }
+                k=z;
+
+                System.out.println("n = " + Mathemath.normalize(data.get(k)));
+                delta -= Mathemath.normalize(data.get(k));
+                delta = Mathemath.funActivator(delta);
+
+
+                delta = (delta + Mathemath.normalize(data.get(k))) / 2 - delta + 0.6;
+
+                if(flag)
+                {
+                    delta = delta + 0.6;
+                }
+
+                System.out.println("delta = " +delta);
+
+                DataExchange.dataout.add(delta);
+                DataExchange.datain.add(Mathemath.normalize(data.get(k)));
+                System.out.println("number " + l);
+                k++;
+                l++;
+            }
+            System.out.println(Mathemath.error(DataExchange.datain, DataExchange.dataout));
         }
-
-
+        catch (Exception e)
+        {
+            System.out.println("end");
+            System.out.println(Mathemath.error(DataExchange.datain, DataExchange.dataout));
+          /*  if(Mathemath.error(DataExchange.datain, DataExchange.dataout)>0.09)
+            {
+                flag = true;
+                testing(data);
+            }*/
+        }
     }
-
-    private static double initGaussianRandomWeight() {
-        Random r = new Random();
-        double m = 0;
-        double sqrS = 1;
-        double powE = -(Math.pow(r.nextGaussian() - m, 2)) / (2 * sqrS);
-        double coff = 1 / (Math.sqrt(2 * sqrS * Math.PI));
-        return Math.pow(Math.E, powE) * coff;
-    }
-
 
 }
