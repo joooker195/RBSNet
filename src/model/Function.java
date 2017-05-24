@@ -14,7 +14,6 @@ public class Function {
     private ArrayList<Neuron> firstLayer;
     private ArrayList<Neuron> secondLayer;
     private final double m = 0.00001;
-    int n = 10000;
     double delta = 1;
     int iter = 0;
     public static final double MO = 10;
@@ -25,7 +24,6 @@ public class Function {
         secondLayer = network.get(1);
     }
 
-    private static double e = 0.1;
     public void learn(ArrayList<Double> data) {
         // data = sort();
         System.out.println("Learn");
@@ -34,7 +32,6 @@ public class Function {
         int z=k;
         DataExchange.dataout = new ArrayList<Double>();
         while (Mathemath.normalize(Mathemath.e) >=0.001) {
-            System.out.println("e = "+Mathemath.normalize(Mathemath.e));
             delta = 0;
             if(k>=data.size()) {
                  k=0;
@@ -42,11 +39,17 @@ public class Function {
             for (int i = 0; i < firstLayer.size(); i++) {
                 ArrayList<Double> a = new ArrayList<Double>();
                 z=k;
-                for (int j = 0; j < 5; j++) {
+                for (int j = 0; j < firstLayer.size(); j++) {
                     if(z>=data.size()) {
                         z=0;
                     }
-                    a.add(Mathemath.normalize(data.get(k), MO, D));
+                   if(j==0)
+                    {
+                        a.add(1.0);
+                    }
+                    else
+                       a.add(Mathemath.normalize(data.get(z), MO, D));
+               //     a.add(data.get(k));
                     z++;
                     if(z>=data.size()) {
                         z=0;
@@ -65,10 +68,7 @@ public class Function {
             delta -= Mathemath.normalize(data.get(k));
 
 
-          //  DataExchange.dataout.add(delta);
-           // DataExchange.datain.add(Mathemath.normalize(data.get(k)));
 
-            Mathemath.condition(delta, Mathemath.normalize(data.get(k)));
             if (MainFunctional.condition(delta, Mathemath.normalize(data.get(k))) && iter>100000) {
                 break;
             }
@@ -80,11 +80,18 @@ public class Function {
             for (int i = 0; i < secondLayer.size(); i++) {
                 ArrayList<Double> a = new ArrayList<Double>();
                 z=k;
-                for (int j = 0; j < 5; j++) {
+                for (int j = 0; j < firstLayer.size(); j++) {
                     if(z>=data.size()) {
                         z=0;
                     }
-                    a.add(data.get(z));
+                    if(j==0)
+                    {
+                        a.add(1.0);
+                    }
+                    else
+                     //  a.add(Mathemath.normalize(data.get(k), MO, D));
+                        a.add(data.get(z));
+
                     z++;
                     if(z>=data.size()) {
                         z=0;
@@ -109,17 +116,17 @@ public class Function {
             }
 
 
+
         }
+
 
     }
 
-    private boolean flag = false;
     public void testing(ArrayList<Double> data) throws IOException {
         try {
             System.out.println("Test");
             DataExchange.datain = new ArrayList<Double>();
             DataExchange.dataout = new ArrayList<Double>();
-            int l = 0;
             int k=0;
             int z=k;
             while (k < data.size()) {
@@ -128,20 +135,27 @@ public class Function {
                 for (int i = 0; i < firstLayer.size(); i++) {
                     ArrayList<Double> a = new ArrayList<Double>();
                     z=k;
-                    for (int j = 0; j < 5; j++) {
-                        a.add(Mathemath.normalize(data.get(z)));
+                    for (int j = 0; j < firstLayer.size(); j++) {
+                        if(j==0)
+                        {
+                            a.add(1.0);
+                        }
+                        else
+                       // a.add(Mathemath.normalize(data.get(k), MO, D));
+                            a.add(Mathemath.normalize(data.get(z),MO,D));
+                       //     a.add(Mathemath.normalize(data.get(k)));
                         z++;
-                        if (k >= data.size()) {
+                        if (z >= data.size()) {
                             break;
                         }
                     }
                     InputNeuron n = (InputNeuron) firstLayer.get(i);
-                    // double u = Mathemath.normalize(n.getU(a));
-                    double u = n.getU(a);
+                    double u = n.getUTest(a);
                     MiddleNeuron mn = (MiddleNeuron) secondLayer.get(i);
                     mn.setU(u);
                     delta += mn.getFi();
                     secondLayer.set(i, mn);
+
                 }
                 k=z;
 
@@ -151,8 +165,7 @@ public class Function {
                 delta -= n;
                 delta = Mathemath.funActivator(delta);
 
-
-                delta = corr(delta, n);
+                delta = corr(n);
 
 
                 System.out.println("delta = " + delta);
@@ -172,9 +185,9 @@ public class Function {
         }
     }
 
-    public double corr(double d, double n)
+    public double corr(double n)
     {
-        return (delta + n) / 2 - delta + 0.6;
+        return (delta-n) / 2 + n-0.2;
     }
 
 }
